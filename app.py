@@ -265,6 +265,8 @@ def add_message():
         g.user.messages.append(msg)
         db.session.commit()
 
+        breakpoint()
+
         return redirect(f"/users/{g.user.id}")
 
     return render_template('messages/create.html', form=form)
