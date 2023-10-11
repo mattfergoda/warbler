@@ -35,7 +35,6 @@ def add_user_to_g():
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
 
-
     else:
         g.user = None
 
@@ -124,16 +123,20 @@ def login():
 def logout():
     """Handle logout of user and redirect to homepage."""
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     form = g.csrf_form
 
     if form.validate_on_submit():
+
         do_logout()
         flash("You are logged out.", "success")
         return redirect("/login")
 
     else:
         raise Unauthorized()
-
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
@@ -207,13 +210,13 @@ def start_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     form = g.csrf_form
 
     if form.validate_on_submit():
-
-        if not g.user:
-            flash("Access unauthorized.", "danger")
-            return redirect("/")
 
         followed_user = User.query.get_or_404(follow_id)
         g.user.following.append(followed_user)
@@ -229,13 +232,13 @@ def stop_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     form = g.csrf_form
 
     if form.validate_on_submit():
-
-        if not g.user:
-            flash("Access unauthorized.", "danger")
-            return redirect("/")
 
         followed_user = User.query.get_or_404(follow_id)
         g.user.following.remove(followed_user)
@@ -258,13 +261,13 @@ def delete_user():
     Redirect to signup page.
     """
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     form = g.csrf_form
 
     if form.validate_on_submit():
-
-        if not g.user:
-            flash("Access unauthorized.", "danger")
-            return redirect("/")
 
         do_logout()
 
@@ -320,13 +323,13 @@ def delete_message(message_id):
     Redirect to user page on success.
     """
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     form = g.csrf_form
 
     if form.validate_on_submit():
-
-        if not g.user:
-            flash("Access unauthorized.", "danger")
-            return redirect("/")
 
         msg = Message.query.get_or_404(message_id)
         db.session.delete(msg)
