@@ -34,10 +34,17 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-        g.csrf_form = CsrfForm()
+
 
     else:
         g.user = None
+
+
+@app.before_request
+def add_csrf_form_to_g():
+    """Add the csrf form to to Flask global."""
+
+    g.csrf_form = CsrfForm()
 
 
 def do_login(user):
@@ -121,6 +128,7 @@ def logout():
 
     if form.validate_on_submit():
         do_logout()
+        flash("You are logged out.", "success")
         return redirect("/login")
 
     else:
@@ -199,13 +207,17 @@ def start_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+    form = g.csrf_form
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.append(followed_user)
-    db.session.commit()
+    if form.validate_on_submit():
+
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect("/")
+
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.append(followed_user)
+        db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -217,13 +229,17 @@ def stop_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+    form = g.csrf_form
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.remove(followed_user)
-    db.session.commit()
+    if form.validate_on_submit():
+
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect("/")
+
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.remove(followed_user)
+        db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -242,14 +258,18 @@ def delete_user():
     Redirect to signup page.
     """
 
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+    form = g.csrf_form
 
-    do_logout()
+    if form.validate_on_submit():
 
-    db.session.delete(g.user)
-    db.session.commit()
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect("/")
+
+        do_logout()
+
+        db.session.delete(g.user)
+        db.session.commit()
 
     return redirect("/signup")
 
@@ -274,8 +294,6 @@ def add_message():
         msg = Message(text=form.text.data)
         g.user.messages.append(msg)
         db.session.commit()
-
-        breakpoint()
 
         return redirect(f"/users/{g.user.id}")
 
@@ -302,13 +320,17 @@ def delete_message(message_id):
     Redirect to user page on success.
     """
 
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+    form = g.csrf_form
 
-    msg = Message.query.get_or_404(message_id)
-    db.session.delete(msg)
-    db.session.commit()
+    if form.validate_on_submit():
+
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect("/")
+
+        msg = Message.query.get_or_404(message_id)
+        db.session.delete(msg)
+        db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
 
