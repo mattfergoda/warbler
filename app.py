@@ -293,15 +293,10 @@ def delete_user():
     for message in g.user.messages:
         db.session.delete(message)
 
-    for follow in Follow.query.filter(Follow.user_being_followed_id == g.user.id).all():
-        db.session.delete(follow)
-
-    for follow in Follow.query.filter(Follow.user_following_id == g.user.id).all():
-        db.session.delete(follow)
-
     db.session.delete(g.user)
     db.session.commit()
 
+    flash("User successfully deleted.","success")
     return redirect("/signup")
 
 
