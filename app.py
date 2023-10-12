@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
-from sqlalchemy.exc import IntegrityError, PendingRollbackError
+from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
 from forms import UserAddForm, LoginForm, MessageForm, CsrfForm, EditUserForm
@@ -41,7 +41,7 @@ def add_user_to_g():
 
 @app.before_request
 def add_csrf_form_to_g():
-    """Add the csrf form to to Flask global."""
+    """Add the csrf form to Flask global."""
 
     g.csrf_form = CsrfForm()
 
@@ -128,7 +128,7 @@ def logout():
         return redirect("/")
 
     form = g.csrf_form
-
+    #TODO: switch 132 and 138
     if form.validate_on_submit():
 
         do_logout()
@@ -216,13 +216,14 @@ def start_following(follow_id):
 
     form = g.csrf_form
 
-    if form.validate_on_submit():
+    if form.validate_on_submit(): #TODO: combine with logic on 213
 
         followed_user = User.query.get_or_404(follow_id)
         g.user.following.append(followed_user)
         db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
+#TODO: redirect to something different/flash if form does not validate
 
 
 @app.post('/users/stop-following/<int:follow_id>')
@@ -263,8 +264,8 @@ def profile():
             g.user.username,
             form.password.data,
         )
-
-        if user:
+        #TODO: if user tries to delete images, set to default
+        if user: #TODO: start with if not user, then happy?
             user.username = form.username.data
             user.email = form.email.data
             user.image_url = form.image_url.data
@@ -275,7 +276,7 @@ def profile():
             try:
                 db.session.commit()
 
-            except IntegrityError:
+            except IntegrityError: #TODO: add email to flash message (and on sign in)
                 db.session.rollback()
                 flash("Username already taken", 'danger')
                 return render_template('users/edit.html', form=form)
@@ -289,9 +290,6 @@ def profile():
     return render_template('users/edit.html', form=form)
 
 
-
-
-
 @app.post('/users/delete')
 def delete_user():
     """Delete user.
@@ -299,7 +297,7 @@ def delete_user():
     Redirect to signup page.
     """
 
-    if not g.user:
+    if not g.user: #TODO: combine 300 and 306
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
@@ -309,6 +307,7 @@ def delete_user():
 
         do_logout()
 
+        #TODO: delete all messages (and maybe follows?) first
         db.session.delete(g.user)
         db.session.commit()
 
@@ -389,8 +388,18 @@ def homepage():
     """
 
     if g.user:
+        following_messages = [user.messages for user in g.user.following]
+        following_message_ids = [
+            msg.id for msglist in following_messages for msg in msglist
+        ]
+        user_message_ids = [msg.id for msg in g.user.messages]
+        ids_to_show = following_message_ids + user_message_ids
+
+        ids = [user.id for user in g.user.following]
+        #TODO: get current user info
         messages = (Message
                     .query
+                    .filter(Message.id.in_(ids_to_show))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
