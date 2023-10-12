@@ -2,7 +2,7 @@
 {% block content %}
   <div class="row">
 
-    <aside class="col-md-4 col-lg-3 col-sm-12" id="home-aside">
+    <aside class="col-lg-4 col-md-5 col-sm-12 py-3" id="home-aside">
       <div class="card user-card">
         <div>
           <div class="image-wrapper">
@@ -39,6 +39,13 @@
                 </a>
               </h4>
             </li>
+            <li class="stat">
+              <p class="small">Likes</p>
+              <h4>
+                <a href="/users/{{ g.user.id }}/likes">{{ g.user.liked_messages|length }}
+                </a>
+              </h4>
+            </li>
           </ul>
         </div>
       </div>
@@ -46,16 +53,44 @@
 
     <div class="col-lg-6 col-md-8 col-sm-12">
       <ul class="list-group" id="messages">
-        {% for msg in messages %}
+        {% for message in messages %}
           <li class="list-group-item">
-            <a href="/messages/{{ msg.id }}" class="message-link"/>
-            <a href="/users/{{ msg.user.id }}">
-              <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
+            <a href="/messages/{{ message.id }}" class="message-link"></a>
+            <a href="/users/{{ message.user.id }}">
+              <img src="{{ message.user.image_url }}" alt="" class="timeline-image">
             </a>
             <div class="message-area">
-              <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
-              <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
-              <p>{{ msg.text }}</p>
+              <a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a>
+              <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
+              <p>{{ message.text }}</p>
+
+            <div class="d-block">
+
+              {% if message in g.user.messages %}
+
+                <span>{{ message.liked_by|length }}</span>
+                <i class="bi bi-heart-fill fs-3"></i>
+
+              {% elif message in g.user.liked_messages%}
+
+              <form method="POST" action="/messages/{{ message.id }}/like/delete">
+                {{ g.csrf_form.hidden_tag() }}
+                <span>{{ message.liked_by|length }}</span>
+                <button class="btn btn-default like-button"><i class="bi bi-heart-fill fs-3"></i></button>
+              </form>
+
+              {% else %}
+
+              <form method="POST" action="/messages/{{ message.id }}/like">
+                {{ g.csrf_form.hidden_tag() }}
+                <span>{{ message.liked_by|length }}</span>
+                <button class="btn btn-default like-button"><i class="bi bi-heart fs-3"></i></button>
+              </form>
+
+              {% endif %}
+
+            </div>
+
             </div>
           </li>
         {% endfor %}

@@ -301,6 +301,10 @@ nav + .container {
   color: #657786;
 }
 
+.like-button {
+  z-index: 9999;
+}
+
 /* ==================== User cards on follower/following pages */
 
 .user-card {
