@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
 from forms import UserAddForm, LoginForm, MessageForm, CsrfForm, EditUserForm
-from models import db, connect_db, User, Message, Follow
+from models import db, connect_db, User, Message, Follow, Like
 
 load_dotenv()
 
@@ -338,6 +338,41 @@ def show_message(message_id):
     return render_template('messages/show.html', message=msg)
 
 
+@app.post('/messages/<int:message_id>/like')
+def like_message(message_id):
+    """Like a message."""
+
+    form = g.csrf_form
+
+    if not g.user or not form.validate_on_submit():
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    message = Message.query.get_or_404(message_id)
+    g.user.liked_messages.append(message)
+
+    db.session.commit()
+
+    return redirect("/")
+
+@app.post('/messages/<int:message_id>/like/delete')
+def unlike_message(message_id):
+    """Unlike a message."""
+
+    form = g.csrf_form
+
+    if not g.user or not form.validate_on_submit():
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    like = Like.query.get_or_404((g.user.id, message_id))
+
+    db.session.delete(like)
+    db.session.commit()
+
+    return redirect("/")
+
+
 @app.post('/messages/<int:message_id>/delete')
 def delete_message(message_id):
     """Delete a message.
@@ -346,17 +381,15 @@ def delete_message(message_id):
     Redirect to user page on success.
     """
 
-    if not g.user:
+    form = g.csrf_form
+
+    if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = g.csrf_form
-
-    if form.validate_on_submit():
-
-        msg = Message.query.get_or_404(message_id)
-        db.session.delete(msg)
-        db.session.commit()
+    msg = Message.query.get_or_404(message_id)
+    db.session.delete(msg)
+    db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
 
