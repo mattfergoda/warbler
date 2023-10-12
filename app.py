@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -169,6 +169,19 @@ def show_user(user_id):
     user = User.query.get_or_404(user_id)
 
     return render_template('users/show.html', user=user)
+
+
+@app.get('/users/<int:user_id>/likes')
+def show_user_likes(user_id):
+    """Show messages the user has liked."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+
+    return render_template('users/show_likes.html', user=user)
 
 
 @app.get('/users/<int:user_id>/following')

@@ -47,18 +47,27 @@
 
           <div class="d-block">
 
-            {% if message in g.user.liked_messages %}
+            {% if message in g.user.messages %}
+
+              <span>{{ message.liked_by|length }}</span>
+              <i class="bi bi-heart-fill fs-3"></i>
+
+            {% elif message in g.user.liked_messages%}
+
             <form method="POST" action="/messages/{{ message.id }}/like/delete">
               {{ g.csrf_form.hidden_tag() }}
               <span>{{ message.liked_by|length }}</span>
-              <button class="btn btn-default"><i class="bi bi-heart fs-3"></i></button>
+              <button class="btn btn-default"><i class="bi bi-heart-fill fs-3"></i></button>
             </form>
+
             {% else %}
+
             <form method="POST" action="/messages/{{ message.id }}/like">
               {{ g.csrf_form.hidden_tag() }}
               <span>{{ message.liked_by|length }}</span>
               <button class="btn btn-default"><i class="bi bi-heart fs-3"></i></button>
             </form>
+
             {% endif %}
 
           </div>
