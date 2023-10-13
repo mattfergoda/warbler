@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
 from forms import UserAddForm, LoginForm, MessageForm, CsrfForm, EditUserForm
-from models import db, connect_db, User, Message, Follow, Like
+from models import db, connect_db, User, Message, Like
 
 load_dotenv()
 
@@ -212,7 +212,7 @@ def show_followers(user_id):
 def start_following(follow_id):
     """Add a follow for the currently-logged-in user.
 
-    Redirect to following page for the current for the current user.
+    Redirect to following page for the current user.
     """
 
     form = g.csrf_form
@@ -231,7 +231,7 @@ def start_following(follow_id):
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user.
 
-    Redirect to following page for the current for the current user.
+    Redirect to following page for the current user.
     """
 
     form = g.csrf_form
@@ -309,7 +309,7 @@ def delete_user():
     db.session.delete(g.user)
     db.session.commit()
 
-    flash("User successfully deleted.","success")
+    flash("User successfully deleted.", "success")
     return redirect("/signup")
 
 
@@ -356,7 +356,7 @@ def like_message(message_id):
     """Like a message."""
 
     form = g.csrf_form
-
+    print(request.form['requesting_url'])
     if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -365,15 +365,20 @@ def like_message(message_id):
     g.user.liked_messages.append(message)
 
     db.session.commit()
+    # TODO: Do some research on how to redirect to the requesting page
+    # Could have a hidden form field with endpoint to redirect to.
+    # Research using request object.
 
-    return redirect("/")
+
+    return redirect(request.form['requesting_url'])
+
 
 @app.post('/messages/<int:message_id>/like/delete')
 def unlike_message(message_id):
     """Unlike a message."""
 
     form = g.csrf_form
-
+    print(request.form['requesting_url'])
     if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -383,7 +388,7 @@ def unlike_message(message_id):
     db.session.delete(like)
     db.session.commit()
 
-    return redirect("/")
+    return redirect(request.form['requesting_url'])
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -394,7 +399,6 @@ def delete_message(message_id):
     Redirect to user page on success.
     """
 
-    form = g.csrf_form
 
     if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")

@@ -1,3 +1,5 @@
+<!-- TODO: For user's own messages just say "likes" instead of hearts-->
+
 {% extends 'base.html' %}
 {% block content %}
   <div class="row">
@@ -75,16 +77,22 @@
 
               <form method="POST" action="/messages/{{ message.id }}/like/delete">
                 {{ g.csrf_form.hidden_tag() }}
+                <input hidden name="requesting_url" value="{{ request.url }}">
                 <span>{{ message.liked_by|length }}</span>
-                <button class="btn btn-default like-button"><i class="bi bi-heart-fill fs-3"></i></button>
+                <button class="btn btn-default like-button">
+                  <i class="bi bi-heart-fill fs-3 like-button"></i>
+                </button>
               </form>
 
               {% else %}
 
               <form method="POST" action="/messages/{{ message.id }}/like">
                 {{ g.csrf_form.hidden_tag() }}
+                <input hidden name="requesting_url" value="{{ request.url }}">
                 <span>{{ message.liked_by|length }}</span>
-                <button class="btn btn-default like-button"><i class="bi bi-heart fs-3"></i></button>
+                <button class="btn btn-default like-button">
+                  <i class="bi bi-heart fs-3 like-button"></i>
+                </button>
               </form>
 
               {% endif %}

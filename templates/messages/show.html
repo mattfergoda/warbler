@@ -49,23 +49,29 @@
 
             {% if message in g.user.messages %}
 
-              <span>{{ message.liked_by|length }}</span>
-              <i class="bi bi-heart-fill fs-3"></i>
+              <span>{{ message.liked_by|length }} Likes</span>
+              <!-- <i class="bi bi-heart-fill fs-3"></i> -->
 
             {% elif message in g.user.liked_messages%}
 
             <form method="POST" action="/messages/{{ message.id }}/like/delete">
               {{ g.csrf_form.hidden_tag() }}
+              <input hidden name="requesting_url" value="{{ request.url }}">
               <span>{{ message.liked_by|length }}</span>
-              <button class="btn btn-default"><i class="bi bi-heart-fill fs-3"></i></button>
+              <button class="btn btn-default">
+                <i class="bi bi-heart-fill fs-3 like-button"></i>
+              </button>
             </form>
 
             {% else %}
 
             <form method="POST" action="/messages/{{ message.id }}/like">
               {{ g.csrf_form.hidden_tag() }}
+              <input hidden name="requesting_url" value="{{ request.url }}">
               <span>{{ message.liked_by|length }}</span>
-              <button class="btn btn-default"><i class="bi bi-heart fs-3"></i></button>
+              <button class="btn btn-default">
+                <i class="bi bi-heart fs-3 like-button"></i>
+              </button>
             </form>
 
             {% endif %}

@@ -87,7 +87,10 @@ class User(db.Model):
         nullable=False,
     )
 
-    messages = db.relationship('Message', backref="user")
+    messages = db.relationship(
+        'Message',
+        order_by="desc(Message.timestamp)",
+        backref="user")
 
     followers = db.relationship(
         "User",
@@ -98,7 +101,10 @@ class User(db.Model):
     )
 
     liked_messages = db.relationship(
-        "Message", secondary="likes", backref="liked_by")
+        "Message",
+        order_by="desc(Message.timestamp)",
+        secondary="likes",
+        backref="liked_by")
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"

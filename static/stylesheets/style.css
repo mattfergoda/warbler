@@ -283,6 +283,11 @@ nav + .container {
   background-color: #e6ecf0;
 }
 
+.like-button {
+  position: relative;
+  z-index: 5;
+}
+
 #sidebar-username {
   margin-top: 30px;
   font-size: 21px;
@@ -299,10 +304,6 @@ nav + .container {
 
 .user-location {
   color: #657786;
-}
-
-.like-button {
-  z-index: 9999;
 }
 
 /* ==================== User cards on follower/following pages */
