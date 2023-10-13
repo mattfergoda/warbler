@@ -30,7 +30,11 @@ db.create_all()
 
 
 class UserModelTestCase(TestCase):
+    """Tests for User model."""
+
     def setUp(self):
+        """Make test data"""
+
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
@@ -41,11 +45,31 @@ class UserModelTestCase(TestCase):
         self.u2_id = u2.id
 
     def tearDown(self):
+        """Reset"""
+        
         db.session.rollback()
 
     def test_user_model(self):
         u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
 
-        # User should have no messages & no followers
+        # Users should have no messages & no followers
         self.assertEqual(len(u1.messages), 0)
         self.assertEqual(len(u1.followers), 0)
+        self.assertEqual(len(u1.liked_messages),0)
+
+        self.assertEqual(len(u2.messages), 0)
+        self.assertEqual(len(u2.followers), 0)
+        self.assertEqual(len(u2.liked_messages),0)
+
+    def test_is_following_and_followed_by(self):
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        # test is following
+        self.assertFalse(u1.is_following(u2))
+
+        u1.followers.append(u2)
+        db.session.commit()
+
+        self.assertTrue(u1.is_following(u2))
