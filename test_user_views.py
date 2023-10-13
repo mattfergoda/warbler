@@ -154,8 +154,41 @@ class UserRoutesTestCase(TestCase):
 
             resp = client.get(f"/users/{self.u2_id}/following")
             html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
             self.assertIn("TEST: following.html", html)
 
             resp = client.get(f"/users/{self.u2_id}/followers")
             html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
             self.assertIn("TEST: followers.html", html)
+
+
+
+    def test_logout_follower_following(self):
+        """
+        Test that logged out user can't view another user's follower and
+        following pages.
+        """
+
+        with app.test_client() as client:
+
+            #test viewing following page
+            resp = client.get(
+                f"/users/{self.u2_id}/following",
+                follow_redirects=True
+            )
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+            #test viewing followers page
+            resp = client.get(
+                f"/users/{self.u2_id}/followers",
+                follow_redirects=True
+            )
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
