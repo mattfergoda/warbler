@@ -9,14 +9,8 @@ import os
 from unittest import TestCase
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-from psycopg2.errors import UniqueViolation
 
-from models import (db,
-                    User,
-                    Message,
-                    Follow,
-                    DEFAULT_HEADER_IMAGE_URL,
-                    DEFAULT_IMAGE_URL)
+from models import db, User, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -170,43 +164,6 @@ class UserModelTestCase(TestCase):
         self.assertFalse(User.authenticate("foo","password"))
 
         self.assertFalse(User.authenticate("u1","foo"))
-
-
-
-class MessageModelTestCase(TestCase):
-    """Tests for Message model."""
-
-    def setUp(self):
-        """Make test data"""
-
-        db.session.rollback()
-        Message.query.delete()
-        User.query.delete()
-
-        u1 = User.signup("u1", "u1@email.com", "password", None)
-        db.session.commit()
-        self.u1_id = u1.id
-
-        m1 = Message(text="test1",user_id=self.u1_id)
-
-        db.session.add(m1)
-        db.session.commit()
-        self.m1_id = m1.id
-
-    def tearDown(self):
-        """Rollback fouled transactions"""
-
-        db.session.rollback()
-
-    def test_message_model(self):
-        """Test Message model relationships."""
-
-        m1 = Message.query.get(self.m1_id)
-
-        self.assertEqual(m1.user, User.query.get(self.u1_id))
-        self.assertEqual(m1.text,"test1")
-        self.assertTrue(m1.liked_by == [])
-
 
 
 
