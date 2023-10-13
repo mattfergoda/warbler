@@ -70,8 +70,13 @@
 
               {% if message in g.user.messages %}
 
-                <span>{{ message.liked_by|length }}</span>
-                <i class="bi bi-heart-fill fs-3"></i>
+                <span>{{ message.liked_by|length }}
+                  {% if message.liked_by|length == 1 %}
+                    Like
+                  {% else %}
+                    Likes
+                  {% endif %}
+                </span>
 
               {% elif message in g.user.liked_messages%}
 
