@@ -5,6 +5,7 @@
 #    FLASK_DEBUG=False python -m unittest test_message_views.py
 
 
+from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
 
@@ -19,7 +20,6 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
-from app import app, CURR_USER_KEY
 
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
@@ -53,6 +53,7 @@ class MessageBaseViewTestCase(TestCase):
         self.u1_id = u1.id
         self.m1_id = m1.id
 
+
 class MessageAddViewTestCase(MessageBaseViewTestCase):
     def test_add_message(self):
         # Since we need to change the session to mimic logging in,
@@ -67,4 +68,19 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             self.assertEqual(resp.status_code, 302)
 
-            Message.query.filter_by(text="Hello").one()
+            self.assertEqual(
+                len(Message.query.filter_by(text="Hello").all()), 1)
+
+    def test_delete_message(self):
+
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post(
+                f"/messages/{self.m1_id}/delete", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Message successfully deleted.", html)
+            self.assertFalse(Message.query.filter_by(id=self.m1_id).all())

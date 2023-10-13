@@ -378,7 +378,6 @@ def unlike_message(message_id):
     """Unlike a message."""
 
     form = g.csrf_form
-    print(request.form['requesting_url'])
     if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -399,7 +398,7 @@ def delete_message(message_id):
     Redirect to user page on success.
     """
 
-
+    form = g.csrf_form
     if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -408,6 +407,7 @@ def delete_message(message_id):
     db.session.delete(msg)
     db.session.commit()
 
+    flash("Message successfully deleted.","success")
     return redirect(f"/users/{g.user.id}")
 
 

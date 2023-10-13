@@ -144,13 +144,8 @@ class UserRoutesTestCase(TestCase):
         """
 
         with app.test_client() as client:
-            resp = client.post(
-                "/login",
-                data={
-                    "username": "u1",
-                    "password": "password",
-                }
-            )
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
 
             resp = client.get(f"/users/{self.u2_id}/following")
             html = resp.get_data(as_text=True)
@@ -164,7 +159,7 @@ class UserRoutesTestCase(TestCase):
 
 
 
-    def test_logout_follower_following(self):
+    def test_logged_out_follower_following(self):
         """
         Test that logged out user can't view another user's follower and
         following pages.
