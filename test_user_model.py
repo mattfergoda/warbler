@@ -101,7 +101,7 @@ class UserModelTestCase(TestCase):
 
         db.session.commit()
 
-        u3 = User.query.filter(User.username==username).one_or_none()
+        u3 = db.session.get(User, u3.id)
 
         self.assertTrue(u3.username == username)
         self.assertTrue(u3.email == email)
@@ -158,6 +158,54 @@ class UserModelTestCase(TestCase):
         # Empty password
         with self.assertRaises(ValueError):
             user = User.signup(valid_username, valid_email, None, None)
+
+
+    def test_authenticate(self):
+        """Tests user authentication"""
+
+        u1 = db.session.get(User, self.u1_id)
+
+        self.assertEqual(User.authenticate("u1","password"),u1)
+
+        self.assertFalse(User.authenticate("foo","password"))
+
+        self.assertFalse(User.authenticate("u1","foo"))
+
+
+
+class MessageModelTestCase(TestCase):
+    """Tests for Message model."""
+
+    def setUp(self):
+        """Make test data"""
+
+        db.session.rollback()
+        Message.query.delete()
+        User.query.delete()
+
+        u1 = User.signup("u1", "u1@email.com", "password", None)
+        db.session.commit()
+        self.u1_id = u1.id
+
+        m1 = Message(text="test1",user_id=self.u1_id)
+
+        db.session.add(m1)
+        db.session.commit()
+        self.m1_id = m1.id
+
+    def tearDown(self):
+        """Rollback fouled transactions"""
+
+        db.session.rollback()
+
+    def test_message_model(self):
+        """Test Message model relationships."""
+
+        m1 = Message.query.get(self.m1_id)
+
+        self.assertEqual(m1.user, User.query.get(self.u1_id))
+        self.assertEqual(m1.text,"test1")
+        self.assertTrue(m1.liked_by == [])
 
 
 
