@@ -68,6 +68,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(u2.followers), 0)
         self.assertEqual(len(u2.liked_messages),0)
 
+    # TODO: Separate these out.
     def test_is_following_and_followed_by(self):
         """Test is_following and followed_by instance methods."""
 
@@ -107,6 +108,7 @@ class UserModelTestCase(TestCase):
         self.assertTrue(u3.bio == "")
         self.assertTrue(u3.location == "")
 
+    # TODO: Split these into two tests. Look at solution to see how they did it.
     def test_user_signup_fail(self):
         """Test signing up a new user with invalid credentials."""
 

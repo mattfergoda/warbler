@@ -51,6 +51,9 @@ class UserRoutesTestCase(TestCase):
         with app.test_client() as client:
             resp = client.get("/signup")
             html = resp.get_data(as_text=True)
+
+            # TODO: Test status code too (always do this for integration tests)
+
             self.assertIn("TEST: signup.html", html)
 
 
@@ -66,14 +69,18 @@ class UserRoutesTestCase(TestCase):
                     "email": "u3@email.com"
                 }
             )
+
+            #TODO: Just follow redirect here.
             self.assertEqual(resp.status_code, 302)
             self.assertEqual(resp.location, "/")
 
             u = User.query.filter(User.username == "u3").one_or_none()
+            # TODO: Don't need to test this here, can test this with models tests.
             self.assertTrue(bcrypt.check_password_hash(u.password, "password"))
 
             self.assertEqual(u.email, "u3@email.com")
 
+    # TODO: Could also test for case where email is taken.
     def test_register_username_taken(self):
         """Test a signup with existing username."""
 
@@ -103,7 +110,8 @@ class UserRoutesTestCase(TestCase):
                     "password": "password",
                 }
             )
-
+            # TODO: Follow redirect and check for 200 status code and for
+            # something on that page.
             self.assertEqual(resp.status_code, 302)
             self.assertEqual(resp.location, "/")
             self.assertEqual(session.get(CURR_USER_KEY), self.u1_id)
@@ -135,8 +143,11 @@ class UserRoutesTestCase(TestCase):
         with app.test_client() as client:
             resp = client.get("/login")
             html = resp.get_data(as_text=True)
+            # TODO: Test status code too.
             self.assertIn("TEST: login.html", html)
 
+    # TODO: Break this up into two tests. Also test if users following/being followed
+    # show up on page.
     def test_login_follower_following(self):
         """
         Test viewing another user's follower and following pages

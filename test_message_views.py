@@ -74,6 +74,8 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             # the rest of ours test
             resp = c.post("/messages/new", data={"text": "Hello"})
 
+            # TODO: Follow redirect check for 200 and check for redirect page.
+            # Can check that message shows up too.
             self.assertEqual(resp.status_code, 302)
 
             self.assertEqual(
