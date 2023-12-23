@@ -32,6 +32,17 @@ db.create_all()
 
 bcrypt = Bcrypt()
 
+VALID_USER = {
+        "username" : "u3",
+        "email" : "u3@email.com",
+        "password" : "password",
+}
+
+INVALID_USER = {
+    "username" : "u2", # Username taken
+    "email" : "u2@email.com", # Email taken
+}
+
 
 class UserModelTestCase(TestCase):
     """Tests for User model."""
@@ -68,21 +79,32 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(u2.followers), 0)
         self.assertEqual(len(u2.liked_messages),0)
 
-    # TODO: Separate these out.
-    def test_is_following_and_followed_by(self):
-        """Test is_following and followed_by instance methods."""
+    def test_is_following(self):
+        """Test is_following instance method."""
 
         u1 = User.query.get(self.u1_id)
         u2 = User.query.get(self.u2_id)
 
         self.assertFalse(u1.is_following(u2))
-        self.assertFalse(u2.is_followed_by(u1))
 
         # Have u1 follow u2.
         u2.followers.append(u1)
         db.session.commit()
 
         self.assertTrue(u1.is_following(u2))
+
+    def test_is_followed_by(self):
+        """Test followed_by instance method."""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        self.assertFalse(u2.is_followed_by(u1))
+
+        # Have u1 follow u2.
+        u2.followers.append(u1)
+        db.session.commit()
+
         self.assertTrue(u2.is_followed_by(u1))
 
     def test_user_signup_success(self):
@@ -102,59 +124,82 @@ class UserModelTestCase(TestCase):
         self.assertTrue(u3.email == email)
         self.assertTrue(
             bcrypt.check_password_hash(u3.password, password)
-            )
+        )
         self.assertTrue(u3.image_url == DEFAULT_IMAGE_URL)
         self.assertTrue(u3.header_image_url == DEFAULT_HEADER_IMAGE_URL)
         self.assertTrue(u3.bio == "")
         self.assertTrue(u3.location == "")
 
-    # TODO: Split these into two tests. Look at solution to see how they did it.
-    def test_user_signup_fail(self):
-        """Test signing up a new user with invalid credentials."""
+    def test_user_signup_invalid_username(self):
+        """Test signing up a new user with invalid username."""
 
-        invalid_username = "u2" # Username taken
-        invalid_email = "u2@email.com" # Email taken
-
-        valid_username = "u3"
-        valid_email = "u3@email.com"
-        password = "password"
-
-        # Invalid username
-        user = User.signup(invalid_username, valid_email, password, None)
+        user = User.signup(
+            INVALID_USER["username"], 
+            VALID_USER["email"], 
+            VALID_USER["password"], 
+            None,
+        )
 
         with self.assertRaises(IntegrityError):
             db.session.commit()
 
         db.session.rollback()
 
-        # Invalid email
-        user = User.signup(valid_username, invalid_email, password, None)
+    def test_user_signup_invalid_email(self):
+        """Test signing up a new user with invalid email."""
+
+        user = User.signup(
+            VALID_USER["username"], 
+            INVALID_USER["email"], 
+            VALID_USER["password"], 
+            None,
+        )
 
         with self.assertRaises(IntegrityError):
             db.session.commit()
 
         db.session.rollback()
 
-        # Empty username
-        user = User.signup(None, valid_email, password, None)
+    def test_user_signup_missing_username(self):
+        """Test signing up a new user with missing username."""
+
+        user = User.signup(
+            None, 
+            VALID_USER["email"], 
+            VALID_USER["password"], 
+            None,
+        )
 
         with self.assertRaises(IntegrityError):
             db.session.commit()
 
         db.session.rollback()
+       
+    def test_user_signup_missing_email(self):
+        """Test signing up a new user with missing email."""
 
-        # Empty email
-        user = User.signup(valid_username, None, password, None)
+        user = User.signup(
+            VALID_USER["username"], 
+            None, 
+            VALID_USER["password"], 
+            None,
+        )
 
         with self.assertRaises(IntegrityError):
             db.session.commit()
 
         db.session.rollback()
+        
+    def test_user_signup_missing_password(self):
+        """Test signing up a new user with missing password."""
 
-        # Empty password
         with self.assertRaises(ValueError):
-            user = User.signup(valid_username, valid_email, None, None)
-
+            user = User.signup(
+                VALID_USER["username"], 
+                VALID_USER["email"], 
+                None, 
+                None
+            )
 
     def test_authenticate(self):
         """Tests user authentication"""
@@ -167,5 +212,13 @@ class UserModelTestCase(TestCase):
 
         self.assertFalse(User.authenticate("u1","foo"))
 
+    def test_repr(self):
+        """Test __repr__ function"""
+
+        u1 = db.session.get(User, self.u1_id)
+        self.assertEqual(
+            f"<User #{u1.id}: {u1.username}, {u1.email}>",
+            repr(u1)
+        )
 
 

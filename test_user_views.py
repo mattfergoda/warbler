@@ -8,7 +8,7 @@ from flask import session
 from flask_bcrypt import Bcrypt
 
 from app import app, CURR_USER_KEY
-from models import db, User, Message
+from models import db, User
 
 # This is a bit of hack, but don't use Flask DebugToolbar
 app.config['DEBUG_TB_HOSTS'] = ['dont-show-debug-toolbar']
@@ -52,8 +52,7 @@ class UserRoutesTestCase(TestCase):
             resp = client.get("/signup")
             html = resp.get_data(as_text=True)
 
-            # TODO: Test status code too (always do this for integration tests)
-
+            self.assertEqual(resp.status_code, 200)
             self.assertIn("TEST: signup.html", html)
 
 
@@ -67,20 +66,16 @@ class UserRoutesTestCase(TestCase):
                     "username": "u3",
                     "password": "password",
                     "email": "u3@email.com"
-                }
+                },
+                follow_redirects=True,
             )
 
-            #TODO: Just follow redirect here.
-            self.assertEqual(resp.status_code, 302)
-            self.assertEqual(resp.location, "/")
+            self.assertEqual(resp.status_code, 200)
 
             u = User.query.filter(User.username == "u3").one_or_none()
-            # TODO: Don't need to test this here, can test this with models tests.
-            self.assertTrue(bcrypt.check_password_hash(u.password, "password"))
 
             self.assertEqual(u.email, "u3@email.com")
 
-    # TODO: Could also test for case where email is taken.
     def test_register_username_taken(self):
         """Test a signup with existing username."""
 
@@ -91,6 +86,22 @@ class UserRoutesTestCase(TestCase):
                     "username": "u1",
                     "password": "password",
                     "email": "u3@email.com"
+                }
+            )
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Username or email already taken", html)
+
+    def test_register_email_taken(self):
+        """Test a signup with existing email."""
+
+        with app.test_client() as client:
+            resp = client.post(
+                "/signup",
+                data={
+                    "username": "u3",
+                    "password": "password",
+                    "email": "u1@email.com"
                 }
             )
             html = resp.get_data(as_text=True)
@@ -108,12 +119,13 @@ class UserRoutesTestCase(TestCase):
                 data={
                     "username": "u1",
                     "password": "password",
-                }
+                },
+                follow_redirects=True,
             )
-            # TODO: Follow redirect and check for 200 status code and for
-            # something on that page.
-            self.assertEqual(resp.status_code, 302)
-            self.assertEqual(resp.location, "/")
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("TEST: home.html", html)
             self.assertEqual(session.get(CURR_USER_KEY), self.u1_id)
 
     def test_post_login_bad(self):
@@ -143,52 +155,62 @@ class UserRoutesTestCase(TestCase):
         with app.test_client() as client:
             resp = client.get("/login")
             html = resp.get_data(as_text=True)
-            # TODO: Test status code too.
+            
+            self.assertEqual(resp.status_code, 200)
             self.assertIn("TEST: login.html", html)
 
-    # TODO: Break this up into two tests. Also test if users following/being followed
-    # show up on page.
-    def test_login_follower_following(self):
+    def test_login_following_page(self):
         """
-        Test viewing another user's follower and following pages
-        once logged in.
+        Test viewing user's following page after following another user and
+        logging in.
         """
 
         with app.test_client() as client:
+            # login as u1
             with client.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
 
-            resp = client.get(f"/users/{self.u2_id}/following")
+            # follow u2
+            client.post(f'/users/follow/{self.u2_id}')
+
+            resp = client.get(f"/users/{self.u1_id}/following")
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("TEST: following.html", html)
+            self.assertIn("u2", html)
 
-            resp = client.get(f"/users/{self.u2_id}/followers")
-            html = resp.get_data(as_text=True)
-            self.assertEqual(resp.status_code, 200)
-            self.assertIn("TEST: followers.html", html)
-
-
-
-    def test_logged_out_follower_following(self):
+    def test_login_followers_page(self):
         """
-        Test that logged out user can't view another user's follower and
-        following pages.
+        Test viewing user's followers page with follower once logged in.
         """
 
         with app.test_client() as client:
+            # login as u2
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u2_id
 
-            #test viewing following page
-            resp = client.get(
-                f"/users/{self.u2_id}/following",
-                follow_redirects=True
-            )
+            # follow u1
+            client.post(f'/users/follow/{self.u1_id}')
+
+            # logout
+            client.post('/logout')
+
+            # login as u1
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = client.get(f"/users/{self.u1_id}/followers")
             html = resp.get_data(as_text=True)
-
             self.assertEqual(resp.status_code, 200)
-            self.assertIn("Access unauthorized", html)
+            self.assertIn("TEST: followers.html", html)
+            self.assertIn("u2", html)
 
-            #test viewing followers page
+    def test_logged_out_follower(self):
+        """
+        Test that logged out user can't view another user's followers page.
+        """
+
+        with app.test_client() as client:
             resp = client.get(
                 f"/users/{self.u2_id}/followers",
                 follow_redirects=True
@@ -198,3 +220,65 @@ class UserRoutesTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access unauthorized", html)
 
+    def test_logged_out_following(self):
+        """
+        Test that logged out user can't view another user's following page.
+        """
+
+        with app.test_client() as client:
+            resp = client.get(
+                f"/users/{self.u2_id}/following",
+                follow_redirects=True
+            )
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+    def test_list_users_okay(self):
+        """
+        Test that logged in user can see list of users.
+        """
+
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            #test viewing following page
+            resp = client.get("/users")
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("u1", html)
+            self.assertIn("u2", html)
+
+    def test_list_users_search(self):
+        """
+        Test that logged in user can search among list of users.
+        """
+
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            #test viewing following page
+            resp = client.get("/users?q=u1")
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("u1", html)
+            self.assertNotIn("u2", html)
+
+    def test_list_users_unauth(self):
+        """
+        Test that an anon user can't access list users route.
+        """
+
+        with app.test_client() as client:
+
+            #test viewing following page
+            resp = client.get("/users", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", html)

@@ -72,16 +72,19 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             # Now, that session setting is saved, so we can have
             # the rest of ours test
-            resp = c.post("/messages/new", data={"text": "Hello"})
+            resp = c.post(
+                "/messages/new", 
+                data={"text": "Hello"},
+                follow_redirects=True)
+            html = resp.get_data(as_text=True)
 
-            # TODO: Follow redirect check for 200 and check for redirect page.
-            # Can check that message shows up too.
-            self.assertEqual(resp.status_code, 302)
+            self.assertEqual(resp.status_code, 200)
 
             self.assertEqual(
                 len(Message.query.filter_by(text="Hello").all()),
                 1
             )
+            self.assertIn("Hello", html)
 
     def test_logged_out_add_message(self):
         """Test adding a message while logged out."""
