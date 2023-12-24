@@ -1,5 +1,5 @@
 # Warbler
-A Twitter-like RESTful multi-page application built with Flask, PostgreSQL, SQLAlchemy, Jinja and WTForms with unit and integration tests.
+A Twitter-like multi-page application built with Flask, PostgreSQL, SQLAlchemy, Jinja and WTForms with unit and integration tests.
 
 [Live Demo](https://mattfergoda-warbler.onrender.com/)
 
