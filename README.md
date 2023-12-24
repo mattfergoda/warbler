@@ -19,6 +19,6 @@ To generate a test coverage report:
 - Then run: `python -m coverage report` for a report printed to the terminal or `python -m coverage html` for an html report.
 
 ## Future Work
-- Add integration tests.
+- Add more integration tests.
 - Refactor to use Flask Blueprints.
 - UI tweaks for liking and showing likes.
