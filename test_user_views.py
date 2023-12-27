@@ -8,7 +8,7 @@ from flask import session
 from flask_bcrypt import Bcrypt
 
 from app import app, CURR_USER_KEY
-from models import db, User
+from models import db, User, Message, Like
 
 # This is a bit of hack, but don't use Flask DebugToolbar
 app.config['DEBUG_TB_HOSTS'] = ['dont-show-debug-toolbar']
@@ -261,7 +261,6 @@ class UserRoutesTestCase(TestCase):
             with client.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
 
-            #test viewing following page
             resp = client.get("/users?q=u1")
             html = resp.get_data(as_text=True)
 
@@ -275,10 +274,98 @@ class UserRoutesTestCase(TestCase):
         """
 
         with app.test_client() as client:
-
-            #test viewing following page
             resp = client.get("/users", follow_redirects=True)
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access unauthorized", html)
+
+    def test_show_user_okay(self):
+        """
+        Test that a logged in user can access a user's details.
+        """
+
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = client.get(f"/users/{self.u2_id}")
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("TEST: user detail", html)
+            self.assertIn("u2", html)
+
+    def test_show_user_unauth(self):
+        """
+        Test that an anon user can't see a user's details.
+        """
+
+        with app.test_client() as client:
+            resp = client.get(f"/users/{self.u2_id}", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
+
+class LikeRoutesTestCase(TestCase):
+    """Tests for routes related to likes."""
+
+    def setUp(self):
+        """Make demo data."""
+
+        User.query.delete()
+        Message.query.delete()
+        Like.query.delete()
+
+        u1 = User.signup("u1", "u1@email.com", "password", None)
+        u2 = User.signup("u2", "u2@email.com", "password", None)
+
+        db.session.commit()
+
+        self.u1_id = u1.id
+        self.u2_id = u2.id
+
+        Message(id=1, text="test", user_id=self.u1_id)
+        Like(user_id=self.u2_id, message_id=1)
+
+        db.session.commit()
+
+    def tearDown(self):
+        """Clean up fouled transactions."""
+
+        db.session.rollback()
+
+
+    def test_show_user_likes_okay(self):
+        """
+        Test that a logged in user can access a user's likes.
+        """
+
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = client.get(f"/users/{self.u2_id}/likes")
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("TEST: user show_likes.html", html)
+            self.assertIn("u2", html)
+
+    def test_show_user_likes_unauth(self):
+        """
+        Test that an anon user cannot access a user's likes.
+        """
+
+        with app.test_client() as client:
+            resp = client.get(
+                f"/users/{self.u2_id}/likes", 
+                follow_redirects=True
+            )
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", html)
+
