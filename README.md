@@ -11,7 +11,7 @@ A Twitter-like multi-page application built with Flask, PostgreSQL, SQLAlchemy, 
 - Then generate some dummy data in the database by running: `python3 -m seed`.
 
 ## Test Coverage
-Current test coverage is 94%.
+Current test coverage is 95%.
 
 To generate a test coverage report:
 
