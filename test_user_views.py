@@ -318,59 +318,58 @@ class UserProfileTestCase(UserBaseTestCase):
     # not accessible inside the IntegrityError except block. However, when trying
     # this manually in the dev server it all works as expected.
             
-    # def test_update_profile_dupe_username(self):
-    #     """
-    #     Test fail when updating a user's profile with an existing username.
-    #     """
+    def test_update_profile_dupe_username(self):
+        """
+        Test fail when updating a user's profile with an existing username.
+        """
 
-    #     with app.test_client() as client:
-    #         with client.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.u1_id
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+            resp = client.post(
+                f"/users/profile",
+                data={
+                    "username": "u2", # Username already taken
+                    "email": "u1_updated@email.com",
+                    "image_url": "https://test_image_url.jpg",
+                    "header_image_url": "https://test_header_image_url.jpg",
+                    "location": "location_test",
+                    "bio": "bio_test",
+                    "password": "password",
+                },
+                follow_redirects=True)
+            html = resp.get_data(as_text=True)
 
-    #         resp = client.post(
-    #             f"/users/profile",
-    #             data={
-    #                 "username": "u2", # Username already taken
-    #                 "email": "u1_updated@email.com",
-    #                 "image_url": "https://test_image_url.jpg",
-    #                 "header_image_url": "https://test_header_image_url.jpg",
-    #                 "location": "location_test",
-    #                 "bio": "bio_test",
-    #                 "password": "password",
-    #             },
-    #             follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("TEST: user edit.html", html)
+            self.assertIn("Username or email already taken", html)
 
-    #         self.assertEqual(resp.status_code, 200)
-    #         self.assertIn("TEST: user edit.html", html)
-    #         self.assertIn("Username or email already taken", html)
+    def test_update_profile_dupe_email(self):
+        """
+        Test fail when updating a user's profile with an existing email.
+        """
 
-    # def test_update_profile_dupe_email(self):
-    #     """
-    #     Test fail when updating a user's profile with an existing email.
-    #     """
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
 
-    #     with app.test_client() as client:
-    #         with client.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.u1_id
+            resp = client.post(
+                f"/users/profile",
+                data={
+                    "username": "u1_updated",
+                    "email": "u2@email.com",
+                    "image_url": "https://test_image_url.jpg",
+                    "header_image_url": "https://test_header_image_url.jpg",
+                    "location": "location_test",
+                    "bio": "bio_test",
+                    "password": "password",
+                },
+                follow_redirects=True)
+            html = resp.get_data(as_text=True)
 
-    #         resp = client.post(
-    #             f"/users/profile",
-    #             data={
-    #                 "username": "u1_updated",
-    #                 "email": "u2@email.com",
-    #                 "image_url": "https://test_image_url.jpg",
-    #                 "header_image_url": "https://test_header_image_url.jpg",
-    #                 "location": "location_test",
-    #                 "bio": "bio_test",
-    #                 "password": "password",
-    #             },
-    #             follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
-
-    #         self.assertEqual(resp.status_code, 200)
-    #         self.assertIn("TEST: user edit.html", html)
-    #         self.assertIn("Username or email already taken", html)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("TEST: user edit.html", html)
+            self.assertIn("Username or email already taken", html)
 
     def test_update_profile_unauth(self):
         """

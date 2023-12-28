@@ -281,6 +281,7 @@ def profile():
         except IntegrityError:
             db.session.rollback()
             flash("Username or email already taken", 'danger')
+            g.user = User.query.get(session[CURR_USER_KEY])
             return render_template('users/edit.html', form=form)
 
         flash(f"Successfully updated page.", "success")
