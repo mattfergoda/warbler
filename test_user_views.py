@@ -60,28 +60,51 @@ class UserViewsTestCase(UserBaseTestCase):
     def setUp(self):
         super().setUp()
 
+    def test_follow_okay(self):
+        """
+        Test a user following another user.
+        """
 
-    def test_login_following_page(self):
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = client.post(
+                f'/users/follow/{self.u2_id}', 
+                follow_redirects=True
+            )
+
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("TEST: following.html", html)
+            self.assertIn("u2", html)
+
+    def test_unfollow_okay(self):
         """
         Test viewing user's following page after following another user and
         logging in.
         """
 
         with app.test_client() as client:
-            # login as u1
             with client.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
 
-            # follow u2
-            client.post(f'/users/follow/{self.u2_id}')
+            client.post(
+                f'/users/follow/{self.u2_id}', 
+                follow_redirects=True
+            )
 
-            resp = client.get(f"/users/{self.u1_id}/following")
+            resp = client.post(
+                f'/users/stop-following/{self.u2_id}', 
+                follow_redirects=True
+            )
+
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("TEST: following.html", html)
-            self.assertIn("u2", html)
+            self.assertNotIn("u2", html)
 
-    def test_login_followers_page(self):
+    def test_followers_page(self):
         """
         Test viewing user's followers page with follower once logged in.
         """
@@ -107,7 +130,7 @@ class UserViewsTestCase(UserBaseTestCase):
             self.assertIn("TEST: followers.html", html)
             self.assertIn("u2", html)
 
-    def test_logged_out_follower(self):
+    def test_anon_follower(self):
         """
         Test that logged out user can't view another user's followers page.
         """
@@ -122,7 +145,7 @@ class UserViewsTestCase(UserBaseTestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access unauthorized", html)
 
-    def test_logged_out_following(self):
+    def test_anon_following(self):
         """
         Test that logged out user can't view another user's following page.
         """

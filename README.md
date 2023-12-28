@@ -11,12 +11,12 @@ A Twitter-like multi-page application built with Flask, PostgreSQL, SQLAlchemy, 
 - Then generate some dummy data in the database by running: `python3 -m seed`.
 
 ## Test Coverage
-Current test coverage is around 96%.
+Current test coverage is 94%.
 
 To generate a test coverage report:
 
 - Run: `python -m coverage run -m unittest`. 
-- Then run: `python -m coverage report` for a report printed to the terminal or `python -m coverage html` for an html report.
+- Then run: `coverage report --omit="*/test*"` for a report printed to the terminal or `coverage html --omit="*/test*"` for an html report.
 
 ## Future Work
 - Add more integration tests.

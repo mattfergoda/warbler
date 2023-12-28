@@ -58,20 +58,32 @@ class MessageBaseViewTestCase(TestCase):
         self.m2_id = m2.id
 
 
+class MessageShowViewTestCase(MessageBaseViewTestCase):
+    """Test cases for views related to showing a message."""
+
+    def test_show_message(self):
+        """Test showing a message"""
+
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.get(f"/messages/{self.m1_id}")
+            html = resp.get_data(as_text=True)
+
+            self.assertIn("m1-text", html)
+            self.assertIn("u1", html)
+
 class MessageAddViewTestCase(MessageBaseViewTestCase):
     """Test cases for views related to adding messages."""
 
     def test_add_message(self):
         """Test adding a message"""
 
-        # Since we need to change the session to mimic logging in,
-        # we need to use the changing-session trick:
         with app.test_client() as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
 
-            # Now, that session setting is saved, so we can have
-            # the rest of ours test
             resp = c.post(
                 "/messages/new", 
                 data={"text": "Hello"},
@@ -86,13 +98,10 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             )
             self.assertIn("Hello", html)
 
-    def test_logged_out_add_message(self):
+    def test_anon_add_message(self):
         """Test adding a message while logged out."""
 
         with app.test_client() as c:
-
-            # Now, that session setting is saved, so we can have
-            # the rest of ours test
             resp = c.post(
                 "/messages/new",
                 data={"text": "hi"},
