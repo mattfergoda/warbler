@@ -313,10 +313,6 @@ class UserProfileTestCase(UserBaseTestCase):
             self.assertIn("location_test", html)
             self.assertIn("bio_test", html)
             self.assertIn("Successfully updated page.", html)
-
-    # TODO: These commented-out tests have a bug where user object inside g is 
-    # not accessible inside the IntegrityError except block. However, when trying
-    # this manually in the dev server it all works as expected.
             
     def test_update_profile_dupe_username(self):
         """
