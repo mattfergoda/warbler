@@ -330,7 +330,7 @@ class UserProfileTestCase(UserBaseTestCase):
     #         resp = client.post(
     #             f"/users/profile",
     #             data={
-    #                 "username": "u2",
+    #                 "username": "u2", # Username already taken
     #                 "email": "u1_updated@email.com",
     #                 "image_url": "https://test_image_url.jpg",
     #                 "header_image_url": "https://test_header_image_url.jpg",
