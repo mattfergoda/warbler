@@ -365,10 +365,6 @@ def like_message(message_id):
     g.user.liked_messages.append(message)
 
     db.session.commit()
-    # TODO: Do some research on how to redirect to the requesting page
-    # Could have a hidden form field with endpoint to redirect to.
-    # Research using request object.
-
 
     return redirect(request.form['requesting_url'])
 
